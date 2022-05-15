@@ -96,4 +96,4 @@ if __name__ == "__main__":
     output.columns = ['cbg_fips', '2019-03', '2019-10', '2020-03', '2020-10']
     output = output.fillna('').sort_values('cbg_fips')
     output = spark.createDataFrame(output)
-    output.write.csv(sys.argv[1])
+    output.write.options(header='true').csv(sys.argv[1])
