@@ -48,8 +48,9 @@ def calculate(a, b):
     for home_cbg in visitors:
         if home_cbg in nyc_cbg:
             tmp = distance(b, home_cbg)
-            total_dis += tmp * visitors[home_cbg]
-            count += visitors[home_cbg]
+            if tmp >= 0:
+                total_dis += tmp * visitors[home_cbg]
+                count += visitors[home_cbg]
     return total_dis, count
 
 def avg_dis(l):

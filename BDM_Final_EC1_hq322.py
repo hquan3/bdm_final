@@ -51,8 +51,9 @@ def calculate(a, b):
   for home_cbg in visitors:
     if home_cbg in nyc_cbg:
       tmp = distance(b, home_cbg)
-      for i in range(int(visitors[home_cbg])):
-        dis.append(tmp)
+      if tmp >= 0:
+        for i in range(int(visitors[home_cbg])):
+          dis.append(tmp)
   return dis
 
 def med_dis(l):
