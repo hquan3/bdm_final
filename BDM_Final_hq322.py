@@ -1,24 +1,25 @@
 import math
-from math import sin, cos, sqrt, atan2, radians
-
 import csv
 import json
 import pandas as pd
 from pyspark.sql import SparkSession
 import pyspark
+sc = pyspark.SparkContext.getOrCreate()
+spark = SparkSession(sc)
 
 import sys
 from io import StringIO
 
-sc = pyspark.SparkContext.getOrCreate()
-spark = SparkSession(sc)
+import shapely
+from shapely.geometry import Point
+from pyproj import Transformer
 
 def get_nyc_cbg(csv_file):
 	csv_reader = csv.reader(open(csv_file))
 	next(csv_reader)
 	cbg = {}
 	for row in csv_reader:
-		cbg[row[0]] = (float(row[1]), float(row[2]))
+		cbg[row[0]] = t.transform(float(row[1]), float(row[2]))
 	return cbg
 
 def filter_mapper(record):
@@ -38,21 +39,7 @@ def filter_mapper(record):
                 return poi_cbg, (date_range_end, total_dis, count)
 
 def distance(poi_cbg, home_cbg):
-    R = 6373.0
-
-    lat1 = radians(nyc_cbg[poi_cbg][0])
-    lon1 = radians(nyc_cbg[poi_cbg][1])
-    lat2 = radians(nyc_cbg[home_cbg][0])
-    lon2 = radians(nyc_cbg[home_cbg][1])
-
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-
-    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-    distance = R * c * 0.62137
-    return distance
+    return Point(nyc_cbg[poi_cbg][0], nyc_cbg[poi_cbg][1]).distance(Point(nyc_cbg[home_cbg][0], nyc_cbg[home_cbg][1]))/5280
 
 def calculate(a, b):
     visitors = json.loads(a)
@@ -85,6 +72,8 @@ def group_mapper(tp):
 	return key, avg_dis(dis_dict["2019-03"]), avg_dis(dis_dict["2019-10"]), avg_dis(dis_dict["2020-03"]), avg_dis(dis_dict["2020-10"])
 
 if __name__ == "__main__":
+    t = Transformer.from_crs(4326, 2263)
+    
     nyc_place_key = set(map(lambda x: x[9], pd.read_csv('nyc_supermarkets.csv').to_numpy()))
     nyc_cbg = get_nyc_cbg("nyc_cbg_centroids.csv")
 
